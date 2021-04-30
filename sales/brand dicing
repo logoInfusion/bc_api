@@ -1,0 +1,97 @@
+CREATE TABLE IF NOT EXISTS accounts (
+    Item TEXT PRIMARY KEY,
+    Account TEXT
+);
+
+CREATE TABLE IF NOT EXISTS qb_item_sales_date (
+    entry_id INTEGER PRIMARY KEY,
+    item TEXT,
+    qty INTEGER,
+    amount DECIMAL,
+    date TEXT
+);
+
+DROP TABLE qb_item_sales_date;
+--
+SELECT * FROM qb_item_sales_date
+ORDER BY date;
+
+--
+SELECT * 
+    FROM accounts
+WHERE
+    Account LIKE "%Storm%";
+    
+--
+SELECT * FROM item_sales;
+
+-- Net quantity and sales volume grouped by brand and sorted descending
+SELECT
+    SUM(i.qty) AS Units,
+    ROUND(SUM(i.amount), 2) AS Sales,
+    CASE 
+        WHEN a.Account LIKE "%900 Global%" THEN "900 Global"
+        WHEN a.Account LIKE "%Brunswick%" THEN "Brunswick"
+        WHEN a.Account LIKE "%DV8%" THEN "DV8"
+        WHEN a.Account LIKE "%Ebonite%" THEN "Ebonite"
+        WHEN a.Account LIKE "%Columbia%" THEN "Columbia"
+        WHEN a.Account LIKE "%Hammer%" THEN "Hammer"
+        WHEN a.Account LIKE "%Track%" THEN "Track"
+        WHEN a.Account LIKE "%Radical%" THEN "Radical"
+        WHEN a.Account LIKE "%Storm%" THEN "Storm"
+        WHEN a.Account LIKE "%Roto Grip%" THEN "Roto Grip"
+        WHEN a.Account LIKE "%Motiv%" THEN "Motiv"
+        WHEN a.Account LIKE "%Junior Gold%" THEN "Junior Gold"
+        WHEN a.Account LIKE "%SYC%" THEN "SYC"
+        WHEN a.Account LIKE "%Turbo%" THEN "Turbo"
+        ELSE a.Account
+    END as Brand
+FROM
+    accounts AS a
+INNER JOIN qb_item_sales_date AS i
+    ON a.Item = i.item
+WHERE Brand IN ("900 Global", "Storm", "Roto Grip")
+GROUP BY Brand
+ORDER BY Sales DESC;
+
+-- Sort itemized sales by brand
+SELECT
+    i.date as Date,
+    i.item as SKU,
+    i.qty as Qty,
+    i.amount as Sales,
+    CASE 
+        WHEN a.Account LIKE "%900 Global%" THEN "9G"
+        WHEN a.Account LIKE "%Brunswick%" THEN "BR"
+        WHEN a.Account LIKE "%DV8%" THEN "DV8"
+        WHEN a.Account LIKE "%Ebonite%" THEN "EB"
+        WHEN a.Account LIKE "%Columbia%" THEN "CO"
+        WHEN a.Account LIKE "%Hammer%" THEN "HM"
+        WHEN a.Account LIKE "%Track%" THEN "TR"
+        WHEN a.Account LIKE "%Radical%" THEN "RD"
+        WHEN a.Account LIKE "%Storm%" THEN "ST"
+        WHEN a.Account LIKE "%Roto Grip%" THEN "RG"
+        WHEN a.Account LIKE "%Motiv%" THEN "MT"
+        WHEN a.Account LIKE "%Junior Gold%" THEN "JG"
+        WHEN a.Account LIKE "%SYC%" THEN "SYC"
+        WHEN a.Account LIKE "%Turbo%" THEN "TB"
+        ELSE a.Account
+    END as Brand
+FROM
+    qb_item_sales_date as i
+INNER JOIN 
+    accounts as a
+        ON i.item = a.Item
+WHERE Brand IN ("900 Global", "Storm", "Roto Grip")    
+ORDER BY Brand, Date;    
+
+
+-- Basic summation for all net sales and qty
+SELECT
+    SUM(i.qty) AS Units,
+    ROUND(SUM(i.amount), 2) AS Sales
+FROM
+    accounts AS a
+INNER JOIN item_sales AS i
+    ON a.Item = i.item
+ORDER BY Sales DESC;

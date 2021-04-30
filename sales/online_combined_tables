@@ -1,0 +1,103 @@
+CREATE TABLE IF NOT EXISTS line_items(
+    line_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER,
+    order_date TEXT,
+    customer_id INTEGER,
+    product_id INTEGER,
+    product_qty INTEGER,
+    product_sku TEXT,
+    is_background VARCHAR(6),
+    product_name TEXT,
+    product_index INTEGER,
+    channel_id VARCHAR(6),
+    production_turnaround TEXT,
+    collar VARCHAR(10),
+    size VARCHAR(8),
+    name VARCHAR(6),
+    grip VARCHAR(6),
+    brand VARCHAR(6),
+    charity VARCHAR(6),
+    rush_fee DECIMAL,
+    net_total DECIMAL     
+);
+--
+DROP TABLE line_items;
+--
+SELECT * FROM line_items WHERE order_date BETWEEN '1/1/2021' AND '1/31/2021';
+
+
+--Storm USA Collection by item
+SELECT 
+    order_id,
+    order_date,
+    product_qty,
+    product_sku,
+    product_name,
+    net_total
+FROM line_items
+WHERE
+    product_sku LIKE "%USA%ST%"
+ORDER BY order_date, product_name;
+
+-- STORM ROTO GRIP 900 GLOBAL ITEMIZED LINES.
+--Storm or Roto or 900 Global for sales over 0
+SELECT 
+    date(order_date),
+    product_sku,
+    product_qty,
+    net_total,
+    CASE
+        WHEN order_date LIKE '1/%/2021' THEN 'JAN'
+        WHEN order_date LIKE '2/%/2021' THEN 'FEB'
+        WHEN order_date LIKE '3/%/2021' THEN 'MAR'
+    END as month,
+    brand
+/*    CASE
+        WHEN brand = 'ST' THEN 'Storm'
+        WHEN brand = '9G' THEN '900 Global'
+        WHEN brand = 'RG' THEN 'Roto Grip'
+        WHEN brand = 'BR' THEN "Brunswick"
+        WHEN brand = 'DV8' THEN "DV8"
+        WHEN brand = 'EB' THEN "Ebonite"
+        WHEN brand = 'CO' THEN "Columbia"
+        WHEN brand = 'HM' THEN "Hammer"
+        WHEN brand = 'TR' THEN "Track"
+        WHEN brand = 'RD' THEN "Radical"
+        WHEN brand = 'MT' THEN "Motiv"
+        WHEN brand = 'JG' THEN "Junior Gold"
+        WHEN brand = 'SYC' THEN "SYC"
+        WHEN brand = 'TB' THEN "Turbo"
+        ELSE brand
+    END AS Brand*/
+FROM
+    line_items
+WHERE brand IN ("ST", "RG", "9G")
+--    AND net_total <> 0)
+ORDER BY order_date;
+
+--Find #N/A totals
+SELECT
+    order_id,
+    product_sku,
+    net_total 
+FROM line_items
+WHERE net_total LIKE "%N/A%";
+
+--Pull background only items
+
+SELECT 
+    product_sku,
+    sum(product_qty) as qty,
+    round(sum(net_total), 2) as net_sales
+FROM
+    (SELECT 
+        product_sku,
+        product_qty,
+        net_total,
+        brand
+    FROM line_items
+    WHERE (is_background LIKE "TRUE" AND
+    brand NOT LIKE "N" AND brand IN ("ST", "RG", "9G"))
+    ORDER BY brand, order_date ASC)
+GROUP BY product_sku
+ORDER BY net_sales DESC;
